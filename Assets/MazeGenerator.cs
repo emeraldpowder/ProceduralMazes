@@ -2,48 +2,39 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public class MazeGeneratorCell
-{
-    public int X;
-    public int Y;
-
-    public bool WallLeft = true;
-    public bool WallBottom = true;
-
-    public bool Visited = false;
-    public int DistanceFromStart;
-}
-
 public class MazeGenerator
 {
-    public int Width = 23;
-    public int Height = 15;
+    public int Width = 50;
+    public int Height = 50;
 
-    public MazeGeneratorCell[,] GenerateMaze()
+    public Maze GenerateMaze()
     {
-        MazeGeneratorCell[,] maze = new MazeGeneratorCell[Width, Height];
+        MazeGeneratorCell[,] cells = new MazeGeneratorCell[Width, Height];
 
-        for (int x = 0; x < maze.GetLength(0); x++)
+        for (int x = 0; x < cells.GetLength(0); x++)
         {
-            for (int y = 0; y < maze.GetLength(1); y++)
+            for (int y = 0; y < cells.GetLength(1); y++)
             {
-                maze[x, y] = new MazeGeneratorCell {X = x, Y = y};
+                cells[x, y] = new MazeGeneratorCell {X = x, Y = y};
             }
         }
 
-        for (int x = 0; x < maze.GetLength(0); x++)
+        for (int x = 0; x < cells.GetLength(0); x++)
         {
-            maze[x, Height - 1].WallLeft = false;
+            cells[x, Height - 1].WallLeft = false;
         }
 
-        for (int y = 0; y < maze.GetLength(1); y++)
+        for (int y = 0; y < cells.GetLength(1); y++)
         {
-            maze[Width - 1, y].WallBottom = false;
+            cells[Width - 1, y].WallBottom = false;
         }
 
-        RemoveWallsWithBacktracker(maze);
+        RemoveWallsWithBacktracker(cells);
 
-        PlaceMazeExit(maze);
+        Maze maze = new Maze();
+
+        maze.cells = cells;
+        maze.finishPosition = PlaceMazeExit(cells);
 
         return maze;
     }
@@ -74,8 +65,8 @@ public class MazeGenerator
 
                 chosen.Visited = true;
                 stack.Push(chosen);
+                chosen.DistanceFromStart = current.DistanceFromStart + 1;
                 current = chosen;
-                chosen.DistanceFromStart = stack.Count;
             }
             else
             {
@@ -98,7 +89,7 @@ public class MazeGenerator
         }
     }
 
-    private void PlaceMazeExit(MazeGeneratorCell[,] maze)
+    private Vector2Int PlaceMazeExit(MazeGeneratorCell[,] maze)
     {
         MazeGeneratorCell furthest = maze[0, 0];
 
@@ -118,5 +109,7 @@ public class MazeGenerator
         else if (furthest.Y == 0) furthest.WallBottom = false;
         else if (furthest.X == Width - 2) maze[furthest.X + 1, furthest.Y].WallLeft = false;
         else if (furthest.Y == Height - 2) maze[furthest.X, furthest.Y + 1].WallBottom = false;
+
+        return new Vector2Int(furthest.X, furthest.Y);
     }
 }
